@@ -3,73 +3,118 @@
 
 <head>
 	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Sistema Acadêmico</title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
-		integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+	<script>
+		const theme = localStorage.getItem('theme');
+		if (theme) {
+			document.documentElement.setAttribute('data-bs-theme', theme);
+		}
+	</script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
+	<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
 	<link href="./css/main.css" rel="stylesheet">
-
 </head>
 
-<body data-bs-theme="dark">
+<body data-bs-theme="">
+	<!-- Toast Notification -->
+	<div class="toast-container position-fixed top-0 start-0 p-3">
+		<div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+			<div class="toast-header">
+				<svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
+					<rect width="100%" height="100%" fill="#007aff"></rect>
+				</svg>
+				<strong class="me-auto">Sistema Academico</strong>
+
+				<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+			</div>
+			<div class="toast-body">
+
+			</div>
+		</div>
+	</div>
+	<!-- Toast Notification -->
+	<!-- Delete Modal -->
+	<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5" id="modalTitle">Excluír Aluno</h1>
+				</div>
+				<div class="modal-body text-center">
+					<button type="button" class="border-0 bg-transparent" data-bs-dismiss="modal" id="closeDeleteModal" aria-label="Close"></button>
+					<h3>Deseja realmente excluír o aluno:</h3>
+					<h5 id="nomeAluno"></h5>
+					<span class="text-danger fw-bold">Esta ação é irreversível</span>
+				</div>
+				<div class="modal-footer d-flex justify-content-between">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+					<button type="button" class="btn btn-danger" id="btnDeletar" data-delete="">Sim,
+						Deletar</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- Delete Modal -->
 	<!-- Include Modal -->
-	<div class="modal fade" id="includeModal" tabindex="-1" aria-labelledby="includeModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<form action="./ServletAluno" method="get" class="row">
+	<div class="modal fade" id="includeModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="includeModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<form method="post" class="row" id="mainForm">
 				<div class="modal-content">
 					<div class="modal-header">
 						<h1 class="fs-5" id="includeModalLabel">Cadastro de Alunos</h1>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						<button type="button" id="closeIncludeModal" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
-
 					<div class="modal-body">
 						<input type="hidden" name="cmd" value="incluir">
 						<div class="row mb-3">
-							<div class="col-4 text-end">
+							<div class="col-lg-4 col-sm-3">
 								<label for="txtRa">RA:</label>
 							</div>
-							<div class="col-6">
-								<input type="text" name="txtRa" class="form-control" />
+							<div class="col-lg-6 col-sm-8">
+								<input type="text" name="txtRa" id="txtRa" class="form-control" />
 							</div>
 						</div>
 						<div class="row mb-3">
-							<div class="col-4 text-end">
+							<div class="col-lg-4 col-sm-3">
 								<label for="txtNome">Nome:</label>
 							</div>
-							<div class="col-6">
-								<input type="text" name="txtNome" class="form-control" />
+							<div class="col-lg-6 col-sm-8">
+								<input type="text" name="txtNome" id="txtNome" class="form-control" />
 							</div>
 						</div>
 						<div class="row mb-3">
-							<div class="col-4 text-end">
+							<div class="col-lg-4 col-sm-3">
 								<label for="txtEmail">E-mail:</label>
 							</div>
-							<div class="col-6">
-								<input type="email" name="txtEmail" class="form-control" />
+							<div class="col-lg-6 col-sm-8">
+								<input type="email" name="txtEmail" id="txtEmail" class="form-control" />
 							</div>
 						</div>
 						<div class="row mb-3">
-							<div class="col-4 text-end">
+							<div class="col-lg-4 col-sm-3">
 								<label for="txtEndereco">Endereço:</label>
 							</div>
-							<div class="col-6">
-								<input type="text" name="txtEndereco" class="form-control" />
+							<div class="col-lg-6 col-sm-8">
+								<input type="text" name="txtEndereco" id="txtEndereco" class="form-control" />
 							</div>
 						</div>
 						<div class="row mb-3">
-							<div class="col-4 text-end">
+							<div class="col-lg-4 col-sm-3">
 								<label for="txtData">Data de Nascimento:</label>
 							</div>
-							<div class="col-6">
-								<input type="date" name="txtData" class="form-control" />
+							<div class="col-lg-6 col-sm-8">
+								<input type="date" name="txtData" id="txtData" class="form-control" />
 							</div>
 						</div>
 						<div class="row mb-3">
-							<div class="col-4 text-end">
+							<div class="col-lg-4 col-sm-3">
 								<label for="cmbPeriodo">Periodo:</label>
 							</div>
-							<div class="col-6">
-								<select name="cmbPeriodo" class="form-select">
+							<div class="col-lg-6 col-sm-8">
+								<select name="cmbPeriodo" id="cmbPeriodo" class="form-select">
 									<option value="Manhã">Manhã</option>
 									<option value="Tarde">Tarde</option>
 									<option value="Noite">Noite</option>
@@ -78,32 +123,7 @@
 						</div>
 					</div>
 					<div class="modal-footer text-end">
-						<button type="submit" class="btn btn-primary">Consultar</button>
-					</div>
-				</div>
-			</form>
-		</div>
-	</div>
-	<div class="modal fade" id="consultaModal" tabindex="-1" aria-labelledby="consultaModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<form action="./ServletAluno?cmd=con" method="post" class="row">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h1 class="fs-5" id="consultaModalLabel">Consultar Alunos</h1>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<div class="row mb-3">
-							<div class="col-4 text-end">
-								<label for="txtRa">RA:</label>
-							</div>
-							<div class="col-6">
-								<input type="text" name="txtRa" class="form-control" />
-							</div>
-						</div>
-					</div>
-					<div class="modal-footer text-end">
-						<button type="submit" class="btn btn-primary">Enviar</button>
+						<button type="submit" class="btn btn-primary" id="btnSalvarAluno" data-row-index="" data-insert-type="">Salvar</button>
 					</div>
 				</div>
 			</form>
@@ -112,31 +132,41 @@
 	<header>
 		<h1 class="text-center">Sistema Acadêmico</h1>
 	</header>
-	<main class="container-fluid d-flex justify-content-center home-button flex-column align-items-center">
-		        <div class="row w-50">
-		            <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#includeModal" class="p-3 mt-3 btn btn-lg btn-outline-success"><i class="fa fa-user-plus"></i><br />Incluir Alunos</a>
-		        </div>
-		        <div class="row w-50">
-		            <a href="html\atualizar.html" class="p-3 mt-3 btn btn-lg btn-outline-primary"><i class="fa fa-pen"></i><br />Alterar Alunos</a>
-		        </div>
-		        <div class="row w-50">
-		            <a href="html\excluir.html" class="p-3 mt-3 btn btn-lg btn-outline-danger"><i class="fa fa-trash"></i><br />Excluir Alunos</a>
-		        </div>
-		        <div class="row w-50">
-		            <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#consultaModal" class="p-3 mt-3 btn btn-lg btn-outline-info"><i class="fa fa-search"></i><br />Consultar Alunos</a>
-		        </div>
-		        <div class="row w-50">
-		            <a href="ServletAluno?cmd=listar" class="p-3 mt-3 btn btn-lg btn-outline-light"><i class="fa fa-list"></i><br />Listar todos</a>
-		        </div>
-    		
+	<main>
+		<div class="p-4 d-flex justify-content-between">
+			<button role="button" id="themeToggleButton" class="btn btn-lg"><i class="fa fa-circle-half-stroke fs-1"></i><br />Tema</button>
+			<button data-bs-toggle="modal" data-bs-target="#includeModal" onclick="fillModalInsert()" class="p-3 mt-1 btn btn-lg text-success"><i class="fa fa-user-plus fs-1"></i><br />Incluir
+				Aluno</button>
+		</div>
+		<section class="p-3">
+			<table class="display responsive nowrap" id="listTable">
+				<thead>
+					<tr>
+						<th>RA</th>
+						<th>Nome</th>
+						<th>Endereço</th>
+						<th>E-mail</th>
+						<th>Nascimento</th>
+						<th>Periodo</th>
+						<th>Ações</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody id="listTableBody">
+
+				</tbody>
+			</table>
+		</section>
 	</main>
 
-	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-		integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-		crossorigin="anonymous"></script>
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js"
-		integrity="sha384-Rx+T1VzGupg4BHQYs2gCW9It+akI2MM/mndMCy36UVfodzcJcF0GGLxZIzObiEfa"
-		crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js" integrity="sha384-Rx+T1VzGupg4BHQYs2gCW9It+akI2MM/mndMCy36UVfodzcJcF0GGLxZIzObiEfa" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js" integrity="sha512-uKQ39gEGiyUJl4AI6L+ekBdGKpGw4xJ55+xyJG7YFlJokPNYegn9KwQ3P8A7aFQAUtUsAQHep+d/lrGqrbPIDQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+	<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
+	<script defer src="./js/main_scripts.js"></script>
 </body>
 
 </html>

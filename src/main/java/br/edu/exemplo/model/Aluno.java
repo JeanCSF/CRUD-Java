@@ -14,6 +14,7 @@ public class Aluno {
 	private String endereco;
 	private Date dataNascimento;
 	private String periodo;
+	
 	// construtor
 	public Aluno(int ra, String nome, String email, String endereco, Date dataNascimento, String periodo) {
 		this.ra = ra;

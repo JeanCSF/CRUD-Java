@@ -1,6 +1,12 @@
 package br.edu.exemplo.controller;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -30,66 +36,110 @@ public class ServletAluno extends HttpServlet {
 		return dataF;
 	}
 
+	Aluno aluno = new Aluno();
+	Gson gson = new Gson();
+	AlunoDAO dao;
+
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		Aluno aluno = new Aluno();
-		AlunoDAO dao;
+
 		String cmd = request.getParameter("cmd");
 		try {
-			if (cmd.equals("incluir") || cmd.equals("atualizar") ) {
-				aluno.setRa(Integer.parseInt(request.getParameter("txtRa")));
-				aluno.setNome(request.getParameter("txtNome"));
-				aluno.setEmail(request.getParameter("txtEmail"));
-				aluno.setEndereco(request.getParameter("txtEndereco"));
-				aluno.setPeriodo(request.getParameter("cmbPeriodo"));
-				aluno.setDataNascimento(strToDate(request.getParameter("txtData")));
-			} else {
-				aluno.setRa(Integer.parseInt(request.getParameter("txtRa")));
-			}
-		} catch (Exception e) {
-			//System.out.println("Erro na data");
-			System.out.println(e.getMessage());
-		}
-		try {
 			dao = new AlunoDAO();
-			// direciona para uma nova página
-			RequestDispatcher rd = null;
 			if (cmd.equalsIgnoreCase("incluir")) {
-				dao.salvar(aluno);
-				rd = request.getRequestDispatcher("ServletAluno?cmd=listar");
+				request.setCharacterEncoding("UTF-8");
+				Gson gson = new Gson();
+				Aluno aluno = gson.fromJson(request.getReader(), Aluno.class);
+				JsonObject jsonResponse = new JsonObject();
+				try {
+					dao.salvar(aluno);
+					jsonResponse.addProperty("sucesso", true);
+					jsonResponse.addProperty("message", "Aluno inserido com sucesso!");
+				} catch (Exception e) {
+					jsonResponse.addProperty("sucesso", false);
+					jsonResponse.addProperty("message", "Erro ao inserir aluno: " + e.getMessage());
+				}
+				String json = gson.toJson(jsonResponse);
+				response.setContentType("application/json");
+				response.setCharacterEncoding("UTF-8");
+				response.getWriter().write(json);
 			} else if (cmd.equalsIgnoreCase("listar")) {
+
 				List<Aluno> alunosList = dao.todosAlunos();
-				request.setAttribute("alunosList", alunosList);
-				rd = request.getRequestDispatcher("jsp/mostrarAlunos.jsp");
-			} else if (cmd.equalsIgnoreCase("atu")) {
-				aluno = dao.procurarAluno(aluno.getRa());
-				HttpSession session = request.getSession(true);
-				session.setAttribute("aluno", aluno);
-				rd = request.getRequestDispatcher("jsp/atualizarAluno.jsp");
+				String json = gson.toJson(alunosList);
+				response.setContentType("application/json");
+				response.setCharacterEncoding("UTF-8");
+				response.getWriter().write(json);
+
 			} else if (cmd.equalsIgnoreCase("atualizar")) {
-				dao.atualizar(aluno);
-				rd = request.getRequestDispatcher("ServletAluno?cmd=listar");
-			}else if (cmd.equalsIgnoreCase("con")) {
-                aluno = dao.procurarAluno(aluno.getRa());
-                HttpSession session = request.getSession(true);
-                session.setAttribute("aluno", aluno);
-                rd = request.getRequestDispatcher("jsp/consultarAluno.jsp");
-            } else if (cmd.equalsIgnoreCase("exc")) {
-				aluno = dao.procurarAluno(aluno.getRa());
-				HttpSession session = request.getSession(true);
-				session.setAttribute("aluno", aluno);
-				rd = request.getRequestDispatcher("jsp/excluirAluno.jsp");
+				request.setCharacterEncoding("UTF-8");
+				Gson gson = new Gson();
+				Aluno aluno = gson.fromJson(request.getReader(), Aluno.class);
+				JsonObject jsonResponse = new JsonObject();
+				try {
+					dao.atualizar(aluno);
+					jsonResponse.addProperty("sucesso", true);
+					jsonResponse.addProperty("message", "Aluno atualizado com sucesso!");
+				} catch (Exception e) {
+					jsonResponse.addProperty("sucesso", false);
+					jsonResponse.addProperty("message", "Erro ao atualizar aluno: " + e.getMessage());
+				}
+				String json = gson.toJson(jsonResponse);
+				response.setContentType("application/json");
+				response.setCharacterEncoding("UTF-8");
+				response.getWriter().write(json);
+			} else if (cmd.equalsIgnoreCase("con")) {
+				int raParam = Integer.parseInt(request.getParameter("ra"));
+				Aluno aluno = dao.procurarAluno(raParam);
+				String alunoJson = gson.toJson(aluno);
+				response.setContentType("application/json");
+				response.setCharacterEncoding("UTF-8");
+				response.getWriter().write(alunoJson);
+
+			} else if (cmd.equalsIgnoreCase("checkra")) {
+				int raParam = Integer.parseInt(request.getParameter("ra"));
+				Aluno aluno = dao.procurarAluno(raParam);
+				JsonObject jsonResponse = new JsonObject();
+				if (aluno != null) {
+					jsonResponse.addProperty("sucesso", false);
+					jsonResponse.addProperty("message", "Este RA já está cadastrado!");
+				} else {
+					jsonResponse.addProperty("sucesso", true);
+					jsonResponse.addProperty("message", "OK");
+				}
+				String json = gson.toJson(jsonResponse);
+				response.setContentType("application/json");
+				response.setCharacterEncoding("UTF-8");
+				response.getWriter().write(json);
+
 			} else if (cmd.equalsIgnoreCase("excluir")) {
-				dao.excluir(aluno);
-				rd = request.getRequestDispatcher("ServletAluno?cmd=listar");
+
+				int raParam = Integer.parseInt(request.getParameter("ra"));
+				JsonObject jsonResponse = new JsonObject();
+				try {
+					if (raParam != 0) {
+						dao.excluir(raParam);
+						jsonResponse.addProperty("sucesso", true);
+						jsonResponse.addProperty("message", "Aluno RA: " + raParam + " excluído com sucesso!");
+					} else {
+						jsonResponse.addProperty("sucesso", false);
+						jsonResponse.addProperty("message", "Aluno RA: " + raParam + " não encontrado!");
+					}
+				} catch (Exception e) {
+					jsonResponse.addProperty("sucesso", false);
+					jsonResponse.addProperty("message", "Erro ao excluir aluno: " + e.getMessage());
+				}
+				String json = gson.toJson(jsonResponse);
+				response.setContentType("application/json");
+				response.setCharacterEncoding("UTF-8");
+				response.getWriter().write(json);
+
 			}
 
-			// executa a ação de direcionar para a página JSP
-			rd.forward(request, response);
 		} catch (Exception e) {
 			System.out.println("Erro ao gravar");
 			System.out.println(e.getMessage());
-			
+
 		}
 
 	}

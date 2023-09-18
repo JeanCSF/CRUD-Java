@@ -13,9 +13,9 @@ import br.edu.exemplo.util.ConnectionFactory;
 
 public class AlunoDAO {
 	// classes de banco de dados
-	private Connection conn;   // abre a conexao do banco de dados
-	private PreparedStatement ps;  // permite que scripts SQL sejam executados a partir do Java
-	private ResultSet rs;  // representa as tabelas
+	private Connection conn; // abre a conexao do banco de dados
+	private PreparedStatement ps; // permite que scripts SQL sejam executados a partir do Java
+	private ResultSet rs; // representa as tabelas
 	// classe JavaBean
 	private Aluno aluno;
 
@@ -29,13 +29,36 @@ public class AlunoDAO {
 	}
 
 	// metodo de salvar
+	public boolean verificarRa(int ra) throws Exception {
+		boolean raExiste = false;
+		try {
+			String SQL = "SELECT COUNT(*) FROM alunos WHERE ra = ?";
+			ps = conn.prepareStatement(SQL);
+			ps.setInt(1, ra);
+			rs = ps.executeQuery();
+			if (rs.next()) {
+				int rowCount = rs.getInt(1);
+				raExiste = rowCount > 0;
+			}
+		} catch (SQLException sqle) {
+			throw new Exception("Erro ao verificar se o RA já existe: " + sqle);
+		} finally {
+			ConnectionFactory.closeConnection(null, ps, rs);
+		}
+		return raExiste;
+	}
 
 	public void salvar(Aluno aluno) throws Exception {
 		if (aluno == null)
 			throw new Exception("O valor passado nao pode ser nulo");
+		int ra = aluno.getRa();
+
+		if (verificarRa(ra)) {
+			throw new Exception("Este RA já está cadastrado!");
+		}
 		try {
-			String SQL = "INSERT INTO alunos (ra, nome, email, endereco, datanascimento, periodo) values "
-					+ "(?, ?, ?, ?, ?, ?)";
+			String SQL = "INSERT INTO alunos (ra, nome, email, endereco, datanascimento, periodo, created_at) values "
+					+ "(?, ?, ?, ?, ?, ?, NOW())";
 			ps = conn.prepareStatement(SQL);
 			ps.setInt(1, aluno.getRa());
 			ps.setString(2, aluno.getNome());
@@ -57,8 +80,7 @@ public class AlunoDAO {
 		if (aluno == null)
 			throw new Exception("O valor passado nao pode ser nulo");
 		try {
-			String SQL = "UPDATE alunos set nome=?, email=?, endereco=?, datanascimento=?, "
-					+ "periodo=? WHERE ra=?";
+			String SQL = "UPDATE alunos set nome=?, email=?, endereco=?, datanascimento=?, " + "periodo=? WHERE ra=?";
 			ps = conn.prepareStatement(SQL);
 			ps.setString(1, aluno.getNome());
 			ps.setString(2, aluno.getEmail());
@@ -76,13 +98,13 @@ public class AlunoDAO {
 
 	// metodo de excluir
 
-	public void excluir(Aluno aluno) throws Exception {
-		if (aluno == null)
-			throw new Exception("O valor passado nao pode ser nulo");
+	public void excluir(int raAluno) throws Exception {
+		if (raAluno == 0)
+			throw new Exception("O valor passado nao pode ser 0");
 		try {
 			String SQL = "DELETE FROM alunos WHERE ra = ?";
 			ps = conn.prepareStatement(SQL);
-			ps.setInt(1, aluno.getRa());
+			ps.setInt(1, raAluno);
 			ps.executeUpdate();
 		} catch (SQLException sqle) {
 			throw new Exception("Erro ao excluir dados " + sqle);
@@ -98,7 +120,7 @@ public class AlunoDAO {
 		try {
 			String SQL = "SELECT  * FROM alunos WHERE ra=?";
 			ps = conn.prepareStatement(SQL);
-			ps.setInt(1, raAluno);			
+			ps.setInt(1, raAluno);
 			rs = ps.executeQuery();
 			if (rs.next()) {
 				int ra = rs.getInt("ra");
@@ -107,7 +129,7 @@ public class AlunoDAO {
 				String endereco = rs.getString("endereco");
 				Date dataNascimento = rs.getDate("dataNascimento");
 				String periodo = rs.getString("periodo");
-				
+
 				aluno = new Aluno(ra, nome, email, endereco, dataNascimento, periodo);
 			}
 			return aluno;
@@ -117,7 +139,7 @@ public class AlunoDAO {
 			ConnectionFactory.closeConnection(conn, ps, rs);
 		}
 	}
-	
+
 	// Listar todos os alunos
 
 	public List<Aluno> todosAlunos() throws Exception {
@@ -125,6 +147,7 @@ public class AlunoDAO {
 			ps = conn.prepareStatement("SELECT * FROM alunos");
 			rs = ps.executeQuery();
 			List<Aluno> list = new ArrayList<Aluno>();
+			
 			while (rs.next()) {
 				int ra = rs.getInt("ra");
 				String nome = rs.getString("nome");
@@ -142,4 +165,3 @@ public class AlunoDAO {
 		}
 	}
 }
-
