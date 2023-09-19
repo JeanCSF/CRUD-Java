@@ -8,6 +8,7 @@ var dataTable = $('#listTable').DataTable({
 		"url": "./ServletAluno?cmd=listar",
 		"dataSrc": ""
 	},
+	autoWidth : false,
 	columnDefs: [
 		{
 			orderable: false,
