@@ -224,8 +224,8 @@ async function editarAluno(ra) {
 		var $linha = $('#listTable tbody tr#' + `tr${ra}`);
 
 		$linha.find('td:eq(1)').text(alunoData.nome);
-		$linha.find('td:eq(2)').text(alunoData.email);
-		$linha.find('td:eq(3)').text(alunoData.endereco);
+		$linha.find('td:eq(2)').text(alunoData.endereco);
+		$linha.find('td:eq(3)').text(alunoData.email);
 		$linha.find('td:eq(4)').text(alunoData.dataNascimento);
 		$linha.find('td:eq(5)').text(alunoData.periodo);
 
