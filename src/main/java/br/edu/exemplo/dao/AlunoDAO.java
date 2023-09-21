@@ -57,8 +57,8 @@ public class AlunoDAO {
 			throw new Exception("Este RA já está cadastrado!");
 		}
 		try {
-			String SQL = "INSERT INTO alunos (ra, nome, email, endereco, datanascimento, periodo, created_at) values "
-					+ "(?, ?, ?, ?, ?, ?, NOW())";
+			String SQL = "INSERT INTO alunos (ra, nome, email, endereco, datanascimento, periodo) values "
+					+ "(?, ?, ?, ?, ?, ?)";
 			ps = conn.prepareStatement(SQL);
 			ps.setInt(1, aluno.getRa());
 			ps.setString(2, aluno.getNome());

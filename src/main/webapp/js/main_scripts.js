@@ -8,7 +8,7 @@ var dataTable = $('#listTable').DataTable({
 		"url": "./ServletAluno?cmd=listar",
 		"dataSrc": ""
 	},
-	autoWidth : false,
+	autoWidth: false,
 	columnDefs: [
 		{
 			orderable: false,
@@ -28,7 +28,7 @@ var dataTable = $('#listTable').DataTable({
 		{ "data": "periodo" },
 		{
 			"data": null,
-			"render": function(data, type, row, meta) {
+			"render": function (data, type, row, meta) {
 				return `
 					<span>
 						<button title="Editar Aluno" data-bs-toggle="modal" data-bs-target="#includeModal" class="btn border-0 bg-transparent text-primary" onclick="fillModalAtualizar(${row.ra})"><i class="fa fa-pen"></i></button>
@@ -38,7 +38,7 @@ var dataTable = $('#listTable').DataTable({
 			}
 		}
 	],
-	createdRow: function(row, data, dataIndex) {
+	createdRow: function (row, data, dataIndex) {
 		$(row).attr('id', `tr${data.ra}`);
 	},
 });
@@ -52,15 +52,6 @@ var mainForm = document.getElementById('mainForm');
 const mainFormSubmit = document.querySelector('#btnSalvarAluno');
 const toastElement = document.querySelector('.toast');
 const mainTable = document.querySelector('#listTableBody');
-
-const createElement = (elementName, attributes) => {
-	const element = document.createElement(elementName);
-	const attributesAsArray = Object.entries(attributes);
-
-	attributesAsArray.forEach(([key, value]) => element.setAttribute(key, value));
-
-	return element;
-};
 
 document.querySelector("#themeToggleButton").addEventListener("click", () => {
 	if (document.documentElement.getAttribute('data-bs-theme') == 'dark') {
@@ -104,6 +95,35 @@ function dataFormatadaParaYYYYMMDD(dataFormatada) {
 	const novaData = `${ano}-${numeroMes}-${dia}`;
 
 	return novaData;
+};
+
+function dataMesAbreviado(dataFormatada) {
+	const meses = {
+		'01': 'jan.',
+		'02': 'fev.',
+		'03': 'mar.',
+		'04': 'abr.',
+		'05': 'mai.',
+		'06': 'jun.',
+		'07': 'jul.',
+		'08': 'ago.',
+		'09': 'set.',
+		'10': 'out.',
+		'11': 'nov.',
+		'12': 'dez.'
+	};
+
+	const partesData = dataFormatada.split('-');
+
+	const ano = partesData[0];
+	const numeroMes = partesData[1];
+	const dia = partesData[2];
+
+	const mesAbreviado = meses[numeroMes];
+
+	const dataFormatadaFinal = `${mesAbreviado} ${dia}, ${ano}`;
+
+	return dataFormatadaFinal;
 };
 
 function limparCampos() {
@@ -152,24 +172,14 @@ async function inserirAluno() {
 		}
 		if (responseData.sucesso != false) {
 			msg.textContent = responseData.message;
-			const responseNewAluno = await fetch(`./ServletAluno?cmd=con&ra=${formObj.txtRa}`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				}
-			});
-			const alunoData = await responseNewAluno.json();
-			if (!response.ok) {
-				throw new Error(`Erro na requisição: ${responseNewAluno.statusText}`);
-			}
-			var newRowData = {
-				ra: alunoData.ra,
-				nome: alunoData.nome,
-				endereco: alunoData.endereco,
-				email: alunoData.email,
-				dataNascimento: alunoData.dataNascimento,
-				periodo: alunoData.periodo,
-			}
+			const newRowData = {
+				ra: formObj.txtRa,
+				nome: formObj.txtNome,
+				email: formObj.txtEmail,
+				endereco: formObj.txtEndereco,
+				dataNascimento: dataMesAbreviado(formObj.txtData),
+				periodo: formObj.cmbPeriodo,
+			};
 
 			dataTable.row.add(newRowData).draw();
 			document.querySelector('#closeIncludeModal').click();
@@ -197,6 +207,7 @@ async function editarAluno(ra) {
 		dataNascimento: formObj.txtData,
 		periodo: formObj.cmbPeriodo,
 	};
+
 	try {
 		const response = await fetch(`./ServletAluno?cmd=atualizar`, {
 			method: 'POST',
@@ -210,25 +221,15 @@ async function editarAluno(ra) {
 			msg.textContent = responseData.message;
 			throw new Error(`Erro na requisição: ${response.statusText}`);
 		}
-		msg.textContent = responseData.message;
-		const responseNewAluno = await fetch(`./ServletAluno?cmd=con&ra=${formObj.txtRa}`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			}
-		});
-		const alunoData = await responseNewAluno.json();
-		if (!response.ok) {
-			throw new Error(`Erro na requisição: ${responseNewAluno.statusText}`);
-		}
+
 		var $linha = $('#listTable tbody tr#' + `tr${ra}`);
+		$linha.find('td:eq(1)').text(formObj.txtNome);
+		$linha.find('td:eq(2)').text(formObj.txtEndereco);
+		$linha.find('td:eq(3)').text(formObj.txtEmail);
+		$linha.find('td:eq(4)').text(dataMesAbreviado(formObj.txtData));
+		$linha.find('td:eq(5)').text(formObj.cmbPeriodo);
 
-		$linha.find('td:eq(1)').text(alunoData.nome);
-		$linha.find('td:eq(2)').text(alunoData.endereco);
-		$linha.find('td:eq(3)').text(alunoData.email);
-		$linha.find('td:eq(4)').text(alunoData.dataNascimento);
-		$linha.find('td:eq(5)').text(alunoData.periodo);
-
+		msg.textContent = responseData.message;
 		document.querySelector('#closeIncludeModal').click();
 		toast.show();
 	} catch (error) {
@@ -263,7 +264,7 @@ async function validarCampos() {
 	}
 
 	return true;
-}
+};
 
 mainForm.addEventListener('submit', async (e) => {
 	const insertType = mainFormSubmit.getAttribute('data-insert-type');
